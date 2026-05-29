@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OS Method — o método da v1 do Operating System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&family=Zalando+Sans+SemiExpanded:ital,wght@0,200..900;1,200..900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============ Factor · OS Method — dark, Linear-inspired ============ */
+    :root {
+      --bg:        #0F0E13;
+      --bg-soft:   #1A191F;
+      --surface:   rgba(255,255,255,0.035);
+      --surface-h: rgba(255,255,255,0.06);
+      --text:      #ECECE3;
+      --muted:     #9A998F;
+      --faint:     #5E5D57;
+      --ghost:     rgba(255,255,255,0.05);
+      --line:      rgba(255,255,255,0.10);
+      --line-2:    rgba(255,255,255,0.17);
+      --accent:    #FF7100;
+      --accent-2:  #FF9242;
+      --accent-soft: rgba(255,113,0,0.13);
+      --malva:     #3C1B26;
+      --ok:        #6FCF97;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'TASA Orbiter', system-ui, -apple-system, sans-serif;
+      font-size: 16.5px; line-height: 1.6; color: var(--text);
+      -webkit-font-smoothing: antialiased; position: relative; overflow-x: hidden;
+      background-color: #0F0E13;
+      background-image:
+        radial-gradient(900px 560px at 2% -10%, rgba(255,113,0,0.20), transparent 55%),
+        radial-gradient(820px 700px at 108% -6%, rgba(60,27,38,0.62), transparent 56%),
+        radial-gradient(1150px 840px at 50% 120%, rgba(56,53,78,0.46), transparent 60%),
+        linear-gradient(180deg, #1B1924 0%, #14101B 46%, #0C0B11 100%);
+      background-attachment: fixed; background-repeat: no-repeat;
+    }
+    /* dot-grid texture layered over the gradient wash */
+    body::before {
+      content:''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1.1px, transparent 1.7px);
+      background-size: 23px 23px;
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 42%, rgba(0,0,0,0.4) 72%, transparent 100%);
+      mask-image: linear-gradient(180deg, #000 0%, #000 42%, rgba(0,0,0,0.4) 72%, transparent 100%);
+    }
+    a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 1px; transition: color .15s; }
+    a:hover { color: var(--accent); }
+    strong { font-weight: 700; color: var(--text); }
+    em { font-style: italic; }
+    .zf { font-family: 'Zalando Sans SemiExpanded', sans-serif; letter-spacing: -0.02em; }
+    .mono { font-family: 'Geist Mono', monospace; }
+
+    /* reading progress */
+    .progress { position: fixed; top: 0; left: 0; height: 2px; width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2)); z-index: 200; transition: width .1s linear; }
+
+    /* ============ Shell ============ */
+    .shell { display: grid; grid-template-columns: 272px 1fr; max-width: 1220px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ============ Sidebar ============ */
+    .side { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+      padding: 2.25rem 1.5rem 2rem 2.25rem; border-right: 1px solid var(--line); }
+    .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 0.7rem; margin-bottom: 2.5rem; }
+    .brand svg { width: auto; height: 48px; display: block; }
+    .brand-name { font-weight: 700; font-size: 0.98rem; letter-spacing: -0.01em; }
+    .brand-tag { font-family: 'Geist Mono', monospace; font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent-soft);
+      padding: 0.25em 0.5em; border-radius: 3px; }
+    .nav-group { margin-bottom: 1.6rem; }
+    .nav-group-label { font-family: 'Geist Mono', monospace; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 0.7rem; }
+    .nav-link { display: flex; align-items: center; gap: 0.6rem; font-size: 0.875rem; color: var(--muted);
+      padding: 0.32rem 0; border: none; transition: color .15s; }
+    .nav-link::before { content:''; width: 5px; height: 5px; border-radius: 50%; background: var(--line-2);
+      flex-shrink: 0; transition: all .18s; }
+    .nav-link:hover { color: var(--text); }
+    .nav-link:hover::before { background: var(--muted); }
+    .nav-link.active { color: var(--text); font-weight: 500; }
+    .nav-link.active::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); transform: scale(1.3); }
+    .side-foot { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+      font-family: 'Geist Mono', monospace; font-size: 0.68rem; color: var(--faint); line-height: 1.7; }
+
+    /* ============ Main ============ */
+    .main { padding: 0 4.5rem 7rem; max-width: 860px; }
+    @media (max-width: 1000px) {
+      .shell { grid-template-columns: 1fr; }
+      .side { position: static; height: auto; flex-direction: column; border-right: none; border-bottom: 1px solid var(--line); padding: 1.5rem 1.75rem; }
+      .nav-wrap { display: none; }
+      .main { padding: 0 1.75rem 5rem; }
+    }
+
+    /* ============ Hero ============ */
+    .hero { position: relative; padding: 6rem 0 4rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--line-2); }
+    .hero::before { content:''; position: absolute; top: -120px; left: -160px; width: 560px; height: 480px; z-index: -1;
+      background: radial-gradient(circle at center, rgba(255,113,0,0.16), rgba(60,27,38,0.08) 45%, transparent 70%); filter: blur(34px); }
+    .hero-symbol { position: absolute; top: 2rem; right: -1rem; width: 230px; height: 230px; opacity: 0.05; z-index: -1; }
+    .hero-eyebrow { font-family: 'Geist Mono', monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1.6rem; }
+    .hero h1 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: clamp(3rem, 9vw, 5.5rem); font-weight: 800;
+      letter-spacing: -0.045em; line-height: 0.94; margin-bottom: 1.6rem;
+      background: linear-gradient(180deg, #FFFFFF 30%, #B7B7AE 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-lede { font-size: clamp(1.25rem, 2.6vw, 1.6rem); line-height: 1.4; max-width: 32ch; color: var(--text); font-weight: 400; }
+    .hero-lede em { color: var(--muted); font-style: normal; }
+    .hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 2.5rem;
+      font-family: 'Geist Mono', monospace; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .hero-meta strong { color: var(--text); font-weight: 600; }
+    .hero-meta .sep { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+
+    /* ============ Section label (line that crosses) ============ */
+    .section { position: relative; padding: 3.5rem 0; border-bottom: 1px solid var(--line); }
+    .section:last-of-type { border-bottom: none; }
+    .sec-label { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
+    .sec-label .n { font-family: 'Geist Mono', monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+    .sec-label .t { font-family: 'Geist Mono', monospace; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .sec-label .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
+    .section h2 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 1.6rem; max-width: 22ch; }
+    .section h3 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 1.15rem; font-weight: 700;
+      letter-spacing: -0.01em; margin: 2.25rem 0 0.85rem; }
+    .section p { margin-bottom: 1.15rem; max-width: 64ch; }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul, .section ol { margin: 0 0 1.15rem 0; list-style: none; }
+    .section li { margin-bottom: 0.55rem; padding-left: 1.4rem; position: relative; }
+    .section li::before { content:''; position: absolute; left: 0.1rem; top: 0.62em; width: 5px; height: 5px;
+      border-radius: 50%; background: var(--accent); opacity: 0.8; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.86rem; }
+
+    /* ============ Manifesto ============ */
+    .prose-lg p { font-size: 1.18rem; line-height: 1.6; }
+    .pull { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+      font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; margin: 2.25rem 0; max-width: 30ch; color: var(--text); }
+    .pull .hl { color: var(--accent); font-weight: 700; }
+    .def { position: relative; padding: 1.3rem 0 1.3rem 1.8rem; margin: 2.5rem 0; font-size: 1.35rem; line-height: 1.42;
+      font-weight: 500; max-width: 46ch; }
+    .def::before { content:''; position: absolute; left: 0; top: 0.4rem; bottom: 0.4rem; width: 3px;
+      background: linear-gradient(180deg, var(--accent), transparent); }
+
+    /* manifesto figure — o vale → o OS fecha o vale */
+    .fig { margin: 2.6rem 0; border: 1px solid var(--line); border-radius: 10px; padding: 2rem 1.8rem; background: rgba(255,255,255,0.018); }
+    .fig-row { display: flex; align-items: center; gap: 0.85rem; }
+    .fig-end { font-family: 'Geist Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+    .fig-end--on { color: var(--text); }
+    .fig-rule { flex: 1; height: 1px; background: var(--line-2); opacity: 0.55; }
+    .fig-gap { flex: 0 0 auto; width: 120px; height: 34px; color: var(--muted); }
+    .fig-flow { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .fig-os { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 0.82rem; color: #000;
+      background: linear-gradient(135deg, var(--accent), #E85D00); border-radius: 999px; padding: 0.42rem 1rem; white-space: nowrap; box-shadow: 0 0 22px rgba(255,113,0,0.2); }
+    .fig-cap { font-family: 'Geist Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); text-align: center; margin: 0.7rem 0 0; max-width: none; }
+    .fig-cap--on { color: var(--muted); }
+    .fig-cap--on b { color: var(--accent); font-weight: 600; }
+    .fig-sep { height: 1px; background: var(--line); margin: 1.6rem 0; }
+    @media (max-width: 520px) { .fig-gap { width: 64px; } .fig-end { font-size: 0.58rem; } .fig-row { gap: 0.5rem; } }
+
+    /* OS constellation — Demanda → (peças em volta do núcleo) → Entrega */
+    .os-flow { display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin: 1.7rem 0 0; }
+    .os-ring { position: relative; flex: 0 0 auto; width: 300px; height: 220px; transform-origin: center; }
+    .os-circle { position: absolute; left: 72px; top: 32px; width: 156px; height: 156px; border: 1px dashed var(--line-2); border-radius: 50%; }
+    .os-circle::after { content: ''; position: absolute; inset: 24px; border: 1px dashed rgba(255,255,255,0.05); border-radius: 50%; }
+    .os-core { position: absolute; left: 150px; top: 110px; transform: translate(-50%,-50%);
+      font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 800; font-size: 0.95rem; color: #000;
+      background: linear-gradient(135deg, var(--accent), #E85D00); border-radius: 999px; padding: 0.45rem 1rem; box-shadow: 0 0 26px rgba(255,113,0,0.28); }
+    .os-node { position: absolute; transform: translate(-50%,-50%); white-space: nowrap;
+      font-family: 'Geist Mono', monospace; font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text);
+      background: var(--bg-soft); border: 1px solid var(--line-2); border-radius: 999px; padding: 0.32em 0.66em; }
+    @media (max-width: 560px) { .os-flow { flex-direction: column; gap: 0; } .os-flow .fig-flow { flex: none; width: 2px; height: 22px; background: linear-gradient(180deg, var(--accent), var(--accent-2)); } .os-ring { transform: scale(0.85); margin: -0.5rem 0; } }
+
+    /* ============ Principles — connected spine ============ */
+    .principles { position: relative; margin-top: 0.5rem; padding-left: 0; }
+    .principles::before { content:''; position: absolute; left: 1.3rem; top: 1.3rem; bottom: 1.3rem; width: 1px;
+      background: linear-gradient(180deg, transparent, var(--line-2) 8%, var(--line-2) 92%, transparent); }
+    .principle { position: relative; display: grid; grid-template-columns: 2.6rem 1fr; gap: 0.35rem 1.5rem;
+      padding: 1.5rem 0; align-items: start; }
+    .principle-num { grid-row: span 2; position: relative; z-index: 1; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      border: 1px solid var(--line-2); background: var(--bg); display: flex; align-items: center; justify-content: center;
+      font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--accent);
+      transition: all .2s; }
+    .principle:hover .principle-num { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .principle-title { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 1.25rem; font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1.25; align-self: center; }
+    .principle-desc { color: var(--muted); font-size: 0.98rem; line-height: 1.6; max-width: 58ch; grid-column: 2; }
+    .principle-desc strong { color: var(--text); }
+
+    /* ============ Tables ============ */
+    .table-wrap { overflow-x: auto; margin: 1.4rem 0 1.6rem; border: 1px solid var(--line); border-radius: 6px; }
+    .table-label { font-family: 'Geist Mono', monospace; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 0.55rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    thead th { text-align: left; padding: 0.65rem 1rem; background: var(--bg-soft); color: var(--muted);
+      font-family: 'Geist Mono', monospace; font-size: 0.64rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+    tbody td { padding: 0.68rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.5; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background .12s; }
+    tbody tr:hover td { background: var(--surface); }
+    code { font-family: 'Geist Mono', monospace; font-size: 0.84em; background: var(--surface-h);
+      padding: 0.12em 0.4em; border-radius: 3px; color: var(--accent-2); }
+
+    /* ============ Code block ============ */
+    pre { background: #0A090F; border: 1px solid var(--line); border-radius: 6px; padding: 1.3rem 1.5rem;
+      overflow-x: auto; margin: 1.1rem 0 1.6rem; line-height: 1.6; position: relative; }
+    pre code { font-family: 'Geist Mono', monospace; font-size: 0.82rem; color: var(--text); background: none; padding: 0; }
+    pre .c { color: var(--faint); }
+
+    /* ============ Callouts ============ */
+    .note { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 1.25rem 1.5rem;
+      margin: 1.6rem 0; position: relative; }
+    .note-label { font-family: 'Geist Mono', monospace; font-size: 0.64rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+    .note p { font-size: 0.92rem; color: var(--muted); margin: 0; max-width: none; }
+    .note p strong { color: var(--text); }
+    .note--warn { border-color: rgba(255,113,0,0.3); background: rgba(255,113,0,0.05); }
+
+    /* ============ Flow ============ */
+    .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0; margin: 1.4rem 0 0.5rem; }
+    .flow-node { border: 1px solid var(--line-2); border-radius: 5px; padding: 0.5rem 0.9rem; font-size: 0.84rem;
+      font-weight: 600; white-space: nowrap; background: var(--bg-soft); }
+    .flow-node--accent { background: var(--accent); color: #000; border-color: var(--accent); }
+    .flow-node--muted { color: var(--muted); border-style: dashed; }
+    .flow-arrow { padding: 0 0.5rem; color: var(--faint); }
+    .flow .mono { font-family: 'Geist Mono', monospace; font-size: 0.78rem; }
+
+    /* vertical work-flow — spine with dots + phase markers */
+    .vflow { position: relative; margin: 1.6rem 0 0.5rem; }
+    .vflow::before { content: ''; position: absolute; left: 0.75rem; top: 0.6rem; bottom: 0.6rem; width: 1px;
+      background: linear-gradient(180deg, transparent, var(--line-2) 5%, var(--line-2) 95%, transparent); }
+    .vphase { display: grid; grid-template-columns: 1.5rem 1fr; align-items: center; gap: 1.1rem; margin: 0.85rem 0 0.35rem; }
+    .vphase .pdot { width: 7px; height: 7px; background: var(--accent); transform: rotate(45deg); margin: 0 auto; box-shadow: 0 0 0 4px var(--bg); }
+    .vphase .plabel { font-family: 'Geist Mono', monospace; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); }
+    .vstage { position: relative; display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.18rem 1.1rem; padding: 0.78rem 0; }
+    .vstage-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--line-2); background: var(--bg);
+      margin: 0.25rem auto 0; box-shadow: 0 0 0 4px var(--bg); }
+    .vstage--key .vstage-dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--bg), 0 0 10px rgba(255,113,0,0.55); }
+    .vstage-head { grid-column: 2; display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+    .vstage-name { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 1.04rem; }
+    .vstage--key .vstage-name { color: var(--accent-2); }
+    .vstage-who { font-family: 'Geist Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0.12em 0.55em; white-space: nowrap; }
+    .vstage-io { grid-column: 2; font-size: 0.9rem; color: var(--muted); margin-top: 0.15rem; line-height: 1.5; }
+    .vstage-io .out { color: var(--text); }
+    .vstage-io .arr { color: var(--accent); margin: 0 0.45em; font-family: 'Geist Mono', monospace; }
+
+    /* tooling — journey + tool cards */
+    .journey { display: flex; align-items: stretch; gap: 0; margin: 1.6rem 0 0.6rem; }
+    .jnode { flex: 1; min-width: 0; border: 1px solid var(--line-2); border-radius: 8px; padding: 0.9rem; background: var(--bg-soft); text-align: center; }
+    .jnode h4 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.25rem; line-height: 1.15; }
+    .jnode p { font-size: 0.72rem; color: var(--muted); margin: 0; max-width: none; line-height: 1.4; }
+    .jnode--here { background: linear-gradient(135deg, var(--accent), #E85D00); color: #000; border-color: var(--accent); box-shadow: 0 0 26px rgba(255,113,0,0.22); }
+    .jnode--here p { color: rgba(0,0,0,0.72); }
+    .jnode--end { background: rgba(255,113,0,0.07); border-color: rgba(255,113,0,0.5); }
+    .jnode--end h4 { color: var(--accent-2); }
+    .jnode--end p { color: var(--muted); }
+    .jarrow { display: flex; align-items: center; padding: 0 0.45rem; color: var(--faint); flex-shrink: 0; }
+    @media (max-width: 600px) { .journey { flex-direction: column; } .jarrow { transform: rotate(90deg); padding: 0.35rem 0; } }
+    .tool { display: flex; gap: 1.1rem; border: 1px solid var(--line-2); border-radius: 8px; padding: 1.2rem 1.4rem; background: var(--surface); margin-bottom: 0.9rem; }
+    .tool-ico { flex-shrink: 0; width: 2.7rem; height: 2.7rem; border-radius: 9px; border: 1px solid var(--line-2);
+      display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--bg-soft); }
+    .tool-ico svg { width: 1.35rem; height: 1.35rem; }
+    .tool-body { flex: 1; min-width: 0; }
+    .tool-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+    .tool-name { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 1.12rem; }
+    .tool-stage { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent); border: 1px solid rgba(255,113,0,0.4); border-radius: 999px; padding: 0.14em 0.6em; white-space: nowrap; }
+    .tool p { font-size: 0.92rem; color: var(--muted); margin: 0; max-width: none; }
+    .tool p strong { color: var(--text); }
+
+    /* role cards (papéis do produto) */
+    .role { display: flex; gap: 1.1rem; padding: 1.2rem 1.4rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); margin-bottom: 0.9rem; }
+    .role-ico { flex-shrink: 0; width: 2.7rem; height: 2.7rem; border-radius: 9px; border: 1px solid var(--line-2);
+      display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--bg-soft); }
+    .role-ico svg { width: 1.35rem; height: 1.35rem; }
+    .role-head { display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 0.35rem; flex-wrap: wrap; }
+    .role-name { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 1.1rem; }
+    .role-phase { font-family: 'Geist Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); border: 1px solid rgba(255,113,0,0.4); border-radius: 999px; padding: 0.12em 0.55em; }
+    .role p { font-size: 0.92rem; color: var(--muted); margin: 0; max-width: none; line-height: 1.55; }
+    .role p strong { color: var(--text); }
+
+    /* ============ Altitudes ============ */
+    .arch { margin: 1.4rem 0 1.2rem; }
+    .arch-layer { padding: 1.1rem 1.4rem; border: 1px solid var(--line-2); margin-bottom: -1px; background: var(--bg-soft);
+      display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; transition: background .15s; }
+    .arch-layer:first-child { border-radius: 6px 6px 0 0; } .arch-layer:last-child { border-radius: 0 0 6px 6px; }
+    .arch-layer h4 { font-size: 1rem; font-weight: 700; }
+    .arch-layer p { font-size: 0.86rem; color: var(--muted); margin: 0.25rem 0 0; flex-basis: 100%; max-width: none; }
+    .arch-meta { font-family: 'Geist Mono', monospace; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; white-space: nowrap; color: var(--faint); }
+    .arch-layer--here { background: linear-gradient(135deg, var(--accent), #E85D00); color: #000; border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(255,113,0,0.18); }
+    .arch-layer--here p, .arch-layer--here .arch-meta { color: rgba(0,0,0,0.72); }
+    .arch-layer--here h4 { color: #000; }
+
+    /* ============ Blueprint — camadas do OS com ícones + spine ============ */
+    .blueprint { position: relative; margin: 1.6rem 0 1.3rem; display: flex; flex-direction: column; gap: 0.7rem; }
+    .bp-layer { position: relative; display: flex; gap: 1.15rem; align-items: flex-start;
+      border: 1px solid var(--line-2); border-radius: 9px; padding: 1.1rem 1.4rem; background: var(--bg-soft); }
+    .bp-ico { position: relative; z-index: 1; flex-shrink: 0; width: 2.8rem; height: 2.8rem; border-radius: 9px;
+      border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--bg); }
+    .bp-ico svg { width: 1.4rem; height: 1.4rem; }
+    .bp-body { flex: 1; min-width: 0; }
+    .bp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+    .bp-name { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 1.08rem; letter-spacing: -0.01em; }
+    .bp-meta { font-family: 'Geist Mono', monospace; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+    .bp-body p { font-size: 0.9rem; color: var(--muted); margin: 0; max-width: none; line-height: 1.5; }
+    /* connector between layers — aligned under the icon column */
+    .bp-link { display: flex; align-items: center; padding-left: 2.36rem; color: var(--faint); margin: 0.05rem 0; }
+    .bp-link svg { width: 0.95rem; height: 0.95rem; }
+
+    /* ============ Catálogo — vista navegável ============ */
+    .cat-frame { border: 1px solid var(--line-2); border-radius: 11px; padding: 1.1rem; background: rgba(255,255,255,0.018); margin: 1.3rem 0 0.6rem; }
+    .cat-bar { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .cat-search { flex: 1; min-width: 190px; display: flex; align-items: center; gap: 0.55rem; border: 1px solid var(--line-2);
+      border-radius: 8px; padding: 0.55rem 0.85rem; background: var(--bg); color: var(--faint); font-size: 0.82rem; }
+    .cat-search svg { width: 0.95rem; height: 0.95rem; flex-shrink: 0; }
+    .cat-search .cur { width: 1px; height: 0.95rem; background: var(--accent); margin-left: -0.2rem; animation: blink 1.1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .cat-chip { font-family: 'Geist Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase;
+      border: 1px solid var(--line-2); border-radius: 999px; padding: 0.34em 0.72em; color: var(--muted); white-space: nowrap; }
+    .cat-chip--on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+    .catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.7rem; }
+    .cat-card { border: 1px solid var(--line); border-radius: 9px; padding: 0.9rem 1rem; background: var(--bg-soft);
+      display: flex; flex-direction: column; gap: 0.55rem; transition: border-color .15s, background .15s, transform .15s; }
+    .cat-card:hover { border-color: var(--accent); background: var(--surface); transform: translateY(-2px); }
+    .cat-top { display: flex; align-items: center; gap: 0.6rem; }
+    .cat-ico { width: 2rem; height: 2rem; border-radius: 7px; border: 1px solid var(--line-2); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--bg); }
+    .cat-ico svg { width: 1.05rem; height: 1.05rem; }
+    .cat-name { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 700; font-size: 0.92rem; line-height: 1.15; letter-spacing: -0.01em; }
+    .cat-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.45; margin: 0; }
+    .cat-foot { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-top: auto; padding-top: 0.15rem; }
+    .cat-tag { font-family: 'Geist Mono', monospace; font-size: 0.55rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--faint); border: 1px solid var(--line); border-radius: 3px; padding: 0.14em 0.42em; }
+    .cat-tag--phase { color: var(--accent); border-color: rgba(255,113,0,0.35); }
+    .cat-card--more { align-items: center; justify-content: center; text-align: center; border-style: dashed; gap: 0.2rem; }
+    .cat-card--more .n { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-weight: 800; font-size: 1.4rem; color: var(--accent); }
+    .cat-card--more p { font-size: 0.72rem; color: var(--muted); margin: 0; }
+
+    /* skills catalog — inventário técnico real (.claude/agents/) */
+    .skillcat { border: 1px solid var(--line-2); border-radius: 11px; padding: 1.1rem 1.2rem; background: rgba(255,255,255,0.012); margin: 1.1rem 0 0.6rem; }
+    .sc-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+      margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--line); }
+    .sc-path { font-family: 'Geist Mono', monospace; font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+    .sc-path svg { width: 0.95rem; height: 0.95rem; color: var(--accent); flex-shrink: 0; }
+    .sc-count { font-family: 'Geist Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+    .sc-group { margin-bottom: 0.9rem; }
+    .sc-group:last-child { margin-bottom: 0; }
+    .sc-glabel { font-family: 'Geist Mono', monospace; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.55rem; display: flex; align-items: baseline; gap: 0.5rem; }
+    .sc-glabel .ct { color: var(--faint); font-weight: 400; }
+    .sc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .sc-chip { font-family: 'Geist Mono', monospace; font-size: 0.66rem; color: var(--text); background: var(--bg-soft);
+      border: 1px solid var(--line-2); border-radius: 5px; padding: 0.27em 0.56em; transition: color .12s, border-color .12s; }
+    .sc-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .sc-chip--bk { border-style: dashed; color: var(--muted); }
+    .sc-chip--ok { border-color: rgba(111,207,151,0.5); color: var(--ok); }
+    .sc-chip--soon { border-color: rgba(255,113,0,0.45); color: var(--accent); }
+
+    /* cross-ref de volta às peças do OS (no runbook aplicado) */
+    .osref { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.45rem 0.6rem; margin: 1.3rem 0 0.4rem;
+      font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+    .osref .lbl { font-family: 'Geist Mono', monospace; font-size: 0.55rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent-soft); border-radius: 3px; padding: 0.22em 0.5em; white-space: nowrap; }
+    .osref .txt { flex: 1; min-width: 60%; }
+    .osref a { border-bottom-color: var(--line-2); font-weight: 500; }
+    .osref a:hover { border-bottom-color: var(--accent); }
+
+    /* ============ Workflow builder — prévia ============ */
+    .wfb { display: grid; grid-template-columns: 158px 1fr; border: 1px solid var(--line-2); border-radius: 11px;
+      overflow: hidden; background: rgba(255,255,255,0.012); margin: 1.1rem 0 0.6rem; }
+    .wfb-palette { border-right: 1px solid var(--line); padding: 0.95rem 0.85rem; display: flex; flex-direction: column; gap: 0.5rem; background: var(--bg-soft); }
+    .wfb-plabel { font-family: 'Geist Mono', monospace; font-size: 0.56rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.1rem; }
+    .wfb-block { display: flex; align-items: center; gap: 0.45rem; font-family: 'Geist Mono', monospace; font-size: 0.66rem; color: var(--text);
+      border: 1px solid var(--line-2); border-radius: 6px; padding: 0.4rem 0.55rem; background: var(--bg); cursor: grab; transition: border-color .12s; }
+    .wfb-block:hover { border-color: var(--accent); }
+    .wfb-block .d { width: 7px; height: 7px; border-radius: 2px; background: var(--accent); flex-shrink: 0; }
+    .wfb-block .d--cond { transform: rotate(45deg); border-radius: 1px; }
+    .wfb-block .d--gate { border-radius: 50%; background: var(--ok); }
+    .wfb-canvas { position: relative; padding: 1.5rem 1rem; display: flex; flex-direction: column; align-items: center;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1.6px); background-size: 17px 17px; }
+    .wfb-node { display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--line-2); border-radius: 8px;
+      padding: 0.5rem 0.85rem; background: var(--bg-soft); font-size: 0.82rem; font-weight: 600; box-shadow: 0 2px 7px rgba(0,0,0,0.28); white-space: nowrap; }
+    .wfb-node .wf-ico { color: var(--accent); display: flex; }
+    .wfb-node .wf-ico svg { width: 0.95rem; height: 0.95rem; }
+    .wfb-node--gate { border-color: rgba(255,113,0,0.55); background: rgba(255,113,0,0.08); }
+    .wfb-node--gate .wf-ico { color: var(--accent-2); }
+    .wfb-node--cond { border-style: dashed; font-family: 'Geist Mono', monospace; font-size: 0.74rem; font-weight: 500; color: var(--muted); }
+    .wfb-conn { width: 2px; height: 17px; background: linear-gradient(180deg, var(--line-2), var(--accent)); opacity: 0.65; }
+    .wfb-branch { font-family: 'Geist Mono', monospace; font-size: 0.58rem; letter-spacing: 0.04em; color: var(--faint); margin: 0.2rem 0; }
+    @media (max-width: 600px) { .wfb { grid-template-columns: 1fr; } .wfb-palette { flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--line); } .wfb-plabel { width: 100%; } }
+
+    /* ============ Matrix 2×2 (o Método inteiro) ============ */
+    .matrix { display: grid; grid-template-columns: 5.5rem 1fr 1fr; gap: 1px; background: var(--line-2);
+      border: 1px solid var(--line-2); border-radius: 6px; overflow: hidden; margin: 1.4rem 0 1rem; }
+    .matrix > div { background: var(--bg-soft); padding: 0.85rem 1rem; }
+    .m-corner { background: rgba(255,255,255,0.015) !important; }
+    .m-col, .m-row { font-family: 'Geist Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); display: flex; align-items: center; }
+    .m-cell { font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+    .m-cell strong { color: var(--text); }
+    .m-cell--src { background: linear-gradient(135deg, var(--accent), #E85D00) !important; color: #000; box-shadow: 0 0 28px rgba(255,113,0,0.22); }
+    .m-cell--src strong { color: #000; }
+    .m-srctag { display: block; font-family: 'Geist Mono', monospace; font-size: 0.58rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.45rem; color: rgba(0,0,0,0.7); }
+
+    /* ============ Version line (OS Method no tempo) ============ */
+    .ver { display: flex; align-items: stretch; flex-wrap: wrap; margin: 1.4rem 0 0.5rem; }
+    .ver-card { flex: 1; min-width: 230px; border: 1px solid var(--line-2); border-radius: 6px; padding: 1.1rem 1.25rem; background: var(--bg-soft); }
+    .ver-card--here { background: linear-gradient(135deg, rgba(255,113,0,0.15), rgba(255,113,0,0.03)); border-color: rgba(255,113,0,0.45); }
+    .ver-card--future { background: transparent; border-style: dashed; }
+    .ver-arrow { display: flex; align-items: center; padding: 0 1rem; color: var(--faint); font-size: 1.2rem; }
+    .ver-tag { font-family: 'Geist Mono', monospace; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.45rem; }
+    .ver-card--future .ver-tag { color: var(--muted); }
+    .ver-card h4 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .ver-card p { font-size: 0.85rem; color: var(--muted); margin: 0; max-width: none; }
+    @media (max-width: 560px) { .ver-arrow { transform: rotate(90deg); padding: 0.4rem 0; width: 100%; justify-content: center; } }
+
+    /* partial coverage of Gestão Digital + vertical "OS Method V1" band */
+    .m-cell--partial { background: linear-gradient(180deg, rgba(255,113,0,0.16), rgba(255,113,0,0.035)) !important; }
+    .m-cell--partial em { color: var(--accent-2); font-style: italic; }
+    .m-bracket { padding: 0.5rem 0 !important; display: flex; align-items: center; justify-content: center;
+      background: var(--accent) !important; box-shadow: 0 0 28px rgba(255,113,0,0.22); }
+    .m-bracket span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Geist Mono', monospace;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #000; white-space: nowrap; }
+
+    /* enabling fork — OS Method V1 → Delivery / Services */
+    .enable { display: flex; align-items: center; gap: 0; margin: 1.5rem 0 0.5rem; }
+    .en-src { flex-shrink: 0; align-self: center; padding: 0.42rem 0.95rem; border-radius: 999px; white-space: nowrap;
+      background: linear-gradient(135deg, var(--accent), #E85D00); color: #000; font-weight: 700;
+      font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 0.82rem; letter-spacing: -0.01em;
+      box-shadow: 0 0 16px rgba(255,113,0,0.16); }
+    .en-fork { flex-shrink: 0; }
+    .en-targets { display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 160px; gap: 1rem; }
+    .en-target { border: 1px solid var(--line-2); border-radius: 6px; padding: 0.7rem 1.1rem; background: var(--bg-soft); }
+    .en-target h4 { font-family: 'Zalando Sans SemiExpanded', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.15rem; }
+    .en-target p { font-size: 0.82rem; color: var(--muted); margin: 0; max-width: none; }
+
+    /* discreet version badge */
+    .vpill { display: inline-block; font-family: 'Geist Mono', monospace; font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.05em; border: 1px solid var(--line-2); border-radius: 999px; padding: 0.1em 0.45em;
+      color: var(--muted); vertical-align: middle; margin-left: 0.4em; position: relative; top: -0.05em; }
+    .en-src .vpill { border-color: rgba(0,0,0,0.35); color: rgba(0,0,0,0.72); }
+    @media (max-width: 560px) { .enable { flex-direction: column; align-items: stretch; gap: 0.75rem; } .en-fork { display: none; } .en-targets { min-height: auto; gap: 0.75rem; } }
+
+    /* ============ Badges ============ */
+    .badge { display: inline-block; padding: 0.16em 0.55em; font-family: 'Geist Mono', monospace; font-size: 0.62rem;
+      font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; }
+    .badge--accent { color: var(--accent); } .badge--muted { color: var(--muted); } .badge--ok { color: var(--ok); }
+
+    /* ============ Foot ============ */
+    .foot { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line-2);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;
+      font-family: 'Geist Mono', monospace; font-size: 0.7rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; }
+    .foot strong { color: var(--muted); }
+
+    @media (max-width: 560px) {
+      .principle { grid-template-columns: 2.2rem 1fr; gap: 0.3rem 1rem; }
+      .principles::before { left: 1.1rem; }
+      .principle-num { width: 2.2rem; height: 2.2rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 1095.92 341.84" xmlns="http://www.w3.org/2000/svg" aria-label="Factor">
+        <path fill="#F4F4EC" d="M201.88,146.12h-16.19v16.19h16.19v-16.19ZM173.79,179.5c-4.47,0-8.09,3.62-8.09,8.09s3.62,8.1,8.09,8.1,8.1-3.62,8.1-8.1-3.62-8.09-8.1-8.09ZM177.44,154.22c0-4.47-3.62-8.09-8.09-8.09s-8.1,3.62-8.1,8.09,3.62,8.09,8.1,8.09,8.09-3.62,8.09-8.09ZM149.64,211.88h-11.58c-4.47,0-8.1,3.62-8.1,8.1s3.62,8.09,8.1,8.09h11.58c4.47,0,8.1-3.62,8.1-8.09s-3.62-8.1-8.1-8.1ZM170.54,130.16c4.47,0,8.09-3.62,8.09-8.09s-3.62-8.09-8.09-8.09-8.1,3.62-8.1,8.09,3.62,8.09,8.1,8.09ZM195.42,130.16h39.78c4.47,0,8.09-3.62,8.09-8.09s-3.62-8.09-8.09-8.09h-39.78c-4.47,0-8.09,3.62-8.09,8.09s3.62,8.09,8.09,8.09ZM146.2,130.16c4.47,0,8.1-3.62,8.1-8.09s-3.62-8.09-8.1-8.09-8.09,3.62-8.09,8.09,3.62,8.09,8.09,8.09ZM129.96,113.97h-16.19v16.19h16.19v-16.19ZM144.45,162.31c4.47,0,8.09-3.62,8.09-8.09s-3.62-8.09-8.09-8.09-8.1,3.62-8.1,8.09,3.62,8.09,8.1,8.09ZM157.43,187.04c0-4.47-3.62-8.1-8.1-8.1h-27.3c-4.47,0-8.1,3.62-8.1,8.1s3.62,8.09,8.1,8.09h27.3c4.47,0,8.1-3.62,8.1-8.09ZM198.68,179.5c-4.47,0-8.1,3.62-8.1,8.09s3.62,8.1,8.1,8.1,8.1-3.62,8.1-8.1-3.62-8.09-8.1-8.09ZM565.18,131.27c26.04,0,33.8,13.05,37.52,25.06l.56,2.06,18.07-4.37-.5-2.01c-6.14-25.35-25.75-39.23-55.5-39.77h-1.79c-15.08,0-28.76,4.62-38.54,13.04-11.93,10.27-17.99,25.54-17.99,45.4,0,8.42,1.16,16.19,3.46,23.09l.06.17v.31s.16.14.16.14l.08.23c7.48,22.15,27.47,35.38,53.46,35.38h1.19c29.7-.56,49.29-14.45,55.43-39.78l.5-2.02-18.08-5.09-.51,2.08c-3.04,13.07-14.53,25.98-37.57,25.98s-39.27-13.07-39.27-40.04,14.75-39.86,39.27-39.86ZM629.8,132.71h37.17c2.61,0,4.72,2.11,4.72,4.72v90.4h18.39v-91.36c0-2.08,1.68-3.76,3.76-3.76h38.62v-18.82h-102.65v18.82ZM950.88,180.34c19.59-4.81,25.69-18.93,25.69-31.92,0-17.65-10.1-34.49-43.21-34.49h-60.35v113.9h18.37v-46.49h29.67c10.27,0,12.91,5.53,14.8,7.88,1.89,2.35,23.64,38.61,23.64,38.61h22.29l-30.91-47.48ZM891.39,167.18v-38.49h45.12c16.29,0,23.71,8.11,23.71,18.13,0,11.45-7.56,20.36-23.71,20.36h-45.12ZM798.45,112.32h-2.39c-15.93,0-30.29,5.1-40.41,14.38-11.36,10.43-17.36,25.81-17.36,44.5,0,20,6.29,35.38,18.67,45.72,10.17,8.48,24.39,13.16,40.06,13.16,13.96,0,26.46-3.55,36.23-10.28l.12-.08c15.38-10.03,23.51-26.95,23.51-48.96,0-35.5-22.37-57.89-58.43-58.44ZM797.02,211.37c-25.81,0-40.01-9.78-40.01-40.17s14.27-40.11,40.01-40.11,40.81,9.94,40.81,40.11-15.01,40.17-40.81,40.17ZM215.03,195.69h16.19v-16.19h-16.19v16.19ZM240.55,146.12h-21.53c-4.47,0-8.1,3.62-8.1,8.09s3.62,8.09,8.1,8.09h21.53c4.47,0,8.1-3.62,8.1-8.09s-3.62-8.09-8.1-8.09ZM311.68,136.25c0-2.59,2.1-4.69,4.69-4.69l64.74-.02v-17.21l-65.2-.35c-11.81-.06-21.43,9.49-21.43,21.31h0s0,0,0,0v92.5h17.19v-44.03h62.83v-17.33h-62.83v-30.18ZM427.84,113.94l-49.72,113.88h19.59l9.38-23.19c1.11-2.76,3.79-4.56,6.76-4.56h52.5c2.97,0,5.65,1.8,6.76,4.56l9.38,23.19h20.24l-49.72-113.88h-25.18ZM415.68,183.87l23.33-53.25h2.67l23.5,53.25h-49.5Z"/>
+      </svg>
+      <span class="brand-tag">OS Method V1</span>
+    </div>
+    <nav class="nav-wrap" id="nav">
+      <div class="nav-group">
+        <div class="nav-group-label">Opinião</div>
+        <a class="nav-link" href="#manifesto">Manifesto</a>
+        <a class="nav-link" href="#principios">Princípios</a>
+        <a class="nav-link" href="#contexto">Onde o OS Method mora</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">O OS</div>
+        <a class="nav-link" href="#anatomia">Anatomia do OS</a>
+        <a class="nav-link" href="#skills">Skills</a>
+        <a class="nav-link" href="#templates">Templates</a>
+        <a class="nav-link" href="#conectores">Conectores</a>
+        <a class="nav-link" href="#workflows">Workflows</a>
+        <a class="nav-link" href="#capabilities">Capabilities</a>
+        <a class="nav-link" href="#providers">Providers</a>
+        <a class="nav-link" href="#tooling">Tooling</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Runbook V1</div>
+        <a class="nav-link" href="#papel">Seu papel: o FDE</a>
+        <a class="nav-link" href="#fluxo">Como o trabalho flui</a>
+        <a class="nav-link" href="#preparar">Preparar o ambiente</a>
+        <a class="nav-link" href="#habilitar">Habilitar os papéis</a>
+        <a class="nav-link" href="#medir">Medir e evoluir</a>
+        <a class="nav-link" href="#gates">Gates e decisões</a>
+        <a class="nav-link" href="#referencia">Referência</a>
+      </div>
+      <div class="side-foot">Rascunho · 29 mai 2026</div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <header class="hero">
+      <p class="hero-eyebrow">O método da v1 do Operating System</p>
+      <h1>OS&nbsp;Method</h1>
+      <p class="hero-lede">O que o Factor OS oferece como jeito de trabalhar. <em>Os princípios que o produto propõe, e o roteiro de quem os aplica em campo.</em></p>
+    </header>
+
+    <!-- 01 MANIFESTO -->
+    <section class="section" id="manifesto">
+      <div class="sec-label"><span class="n">01</span><span class="t">Manifesto</span><span class="rule"></span></div>
+      <div class="prose-lg">
+        <p>Existe um vale entre o que se decide e o que se entrega. Iniciativas travam ali, entre a ideia e o código, porque nada liga a decisão à execução com visibilidade e repetição. É o <strong>Vale da Intenção</strong>, e é onde a maior parte do trabalho de produto morre.</p>
+        <p>O <strong>Factor OS</strong> existe para fechar esse vale. Ele coloca agentes de IA no caminho crítico da entrega e deixa os humanos nas bordas: design, estratégia, supervisão. É o chão sobre o qual os times constroem: Delivery entrega produto, Services planta a operação de um cliente, e os dois rodam sobre o mesmo OS.</p>
+      </div>
+
+      <figure class="fig">
+        <div class="fig-row">
+          <span class="fig-end">Intenção</span>
+          <span class="fig-rule"></span>
+          <svg class="fig-gap" width="120" height="34" viewBox="0 0 120 34" fill="none" aria-hidden="true">
+            <path d="M0 17 L12 6 L24 28 L36 7 L48 27 L60 6 L72 28 L84 7 L96 27 L108 8 L120 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <span class="fig-rule"></span>
+          <span class="fig-end">Realidade</span>
+        </div>
+        <p class="fig-cap">Sem método, a intenção se perde no vale</p>
+
+        <div class="fig-sep"></div>
+
+        <div class="os-flow">
+          <span class="fig-end fig-end--on">Demanda</span>
+          <span class="fig-flow"></span>
+          <div class="os-ring">
+            <span class="os-circle"></span>
+            <span class="os-core">OS</span>
+            <span class="os-node" style="top:32px;left:150px;">Workflows</span>
+            <span class="os-node" style="top:86px;left:224px;">Docs</span>
+            <span class="os-node" style="top:173px;left:196px;">Sistemas</span>
+            <span class="os-node" style="top:173px;left:104px;">Agentes</span>
+            <span class="os-node" style="top:86px;left:76px;">Conectores</span>
+          </div>
+          <span class="fig-flow"></span>
+          <span class="fig-end fig-end--on">Entrega</span>
+        </div>
+      </figure>
+
+      <p class="pull">Mas automação sem opinião só <span class="hl">industrializa o caos.</span> Um agente pode executar qualquer coisa, inclusive a coisa errada.</p>
+      <p class="def">Método é o jeito pelo qual fazemos o que fazemos, para que você construa a coisa certa da melhor maneira.</p>
+      <p>Este documento é o método que <strong>o OS propõe</strong>: a opinião sobre como o trabalho acontece, igual para quem quer que construa sobre ele. O que se segue são os princípios desse método.</p>
+    </section>
+
+    <!-- 02 PRINCÍPIOS -->
+    <section class="section" id="principios">
+      <div class="sec-label"><span class="n">02</span><span class="t">Princípios</span><span class="rule"></span></div>
+      <h2>Como o OS trabalha</h2>
+      <div class="principles">
+        <div class="principle"><span class="principle-num">1</span>
+          <div class="principle-title">Contexto é o trabalho de verdade</div>
+          <p class="principle-desc">Um agente entrega tão bem quanto o contexto que recebe. Documentos, decisões e histórico são a matéria-prima que ele transforma, e preparar esse contexto é a parte que mais determina o resultado. <strong>Onde o contexto falta, o agente preenche com suposição.</strong></p></div>
+        <div class="principle"><span class="principle-num">2</span>
+          <div class="principle-title">A estrutura é o que torna o agente confiável</div>
+          <p class="principle-desc">O modelo é criativo e imprevisível por natureza. Em volta dele, o OS põe uma estrutura fixa (workflows, steps e gates) que dá trilho a essa imprevisibilidade. <strong>A forma se mantém estável; a inteligência opera dentro dela.</strong></p></div>
+        <div class="principle"><span class="principle-num">3</span>
+          <div class="principle-title">Todo avanço passa por uma decisão humana</div>
+          <p class="principle-desc">Cada transição pede uma aprovação, e ela fica registrada. O agente percorre o caminho crítico; o humano decide nos pontos que importam, e cada decisão vira rastro auditável. Assim, <strong>velocidade e controle andam juntos.</strong></p></div>
+        <div class="principle"><span class="principle-num">4</span>
+          <div class="principle-title">O trabalho vive nos artefatos</div>
+          <p class="principle-desc">PRD, User Story, Task, código: <strong>a árvore de artefatos é o trabalho em si</strong>, versionada e rastreável. O que vira artefato pode ser revisado, reusado e auditado pelo time inteiro, não só por quem o gerou.</p></div>
+        <div class="principle"><span class="principle-num">5</span>
+          <div class="principle-title">O que se constrói uma vez serve a todos</div>
+          <p class="principle-desc">Skills, templates e conectores são peças compartilhadas. Uma boa solução vira building block disponível no OS para o próximo time, em vez de morrer onde nasceu. <strong>O sistema fica mais forte a cada uso.</strong></p></div>
+        <div class="principle"><span class="principle-num">6</span>
+          <div class="principle-title">O sistema aprende com o uso</div>
+          <p class="principle-desc">Cada execução deixa um sinal: feedback estruturado que volta para o método e para os agentes. É esse loop que <strong>faz o OS evoluir com o tempo</strong>, em vez de congelar no primeiro acerto.</p></div>
+        <div class="principle"><span class="principle-num">7</span>
+          <div class="principle-title">Decida e siga</div>
+          <p class="principle-desc">A decisão imperfeita que destrava vale mais que a perfeita que nunca chega. <strong>O Vale da Intenção é feito de decisões adiadas</strong>, e o método existe para mantê-las em movimento.</p></div>
+      </div>
+    </section>
+
+    <!-- 03 CONTEXTO -->
+    <section class="section" id="contexto">
+      <div class="sec-label"><span class="n">03</span><span class="t">Contexto</span><span class="rule"></span></div>
+      <h2>Onde o OS Method mora</h2>
+      <p>O OS Method não é o Método inteiro. É uma <strong>projeção</strong>: a fatia da opinião da Factor que o produto consegue materializar hoje. Pra usá-lo bem, vale enxergar o mapa em volta.</p>
+
+      <h3>1 · O Método inteiro vive na Matriz</h3>
+      <p class="muted">O Método agnóstico se organiza em quatro componentes — execução e gestão, no analógico e no digital. Cada célula é uma conversa própria. O OS Method projeta principalmente uma delas.</p>
+      <div class="matrix">
+        <div class="m-corner"></div>
+        <div class="m-col">Analógico</div>
+        <div class="m-col">Digital</div>
+        <div class="m-corner"></div>
+        <div class="m-row">Execução</div>
+        <div class="m-cell">Como o time executa antes da camada digital — processo, ritual, comportamento.</div>
+        <div class="m-cell"><strong>Execução Digital</strong> — como o OS muda a execução.</div>
+        <div class="m-row">Gestão</div>
+        <div class="m-cell">Como o time gere antes da camada digital — cerimônias, cadências.</div>
+        <div class="m-cell"><strong>Gestão Digital</strong> — como o OS muda a gestão (dashboards, métricas vivas).</div>
+        <div class="m-bracket" style="grid-column:4; grid-row:2 / span 2;"><span>OS Method V1 — fatia parcial</span></div>
+      </div>
+
+      <h3>2 · OS Method é o método que flui do OS</h3>
+      <p class="muted">A fatia destacada acima — a coluna Digital da Matriz (Execução e Gestão) —, projetada no Factor OS, é o que você está lendo. O agnóstico vira concreto: gates, comandos, conectores, papéis. As seções de runbook, adiante, são exatamente essa projeção.</p>
+      <p class="muted">Essa camada não é um fim em si: ela <strong>habilita</strong>. O OS Method V1 dá aos FDEs e PMs de Delivery e Services o chão para construírem produtos sobre o OS — cada stream consome a mesma camada, na versão V1.</p>
+      <div class="enable">
+        <div class="en-src">OS Method <span class="vpill">V1</span></div>
+        <svg class="en-fork" width="52" height="160" viewBox="0 0 52 160" fill="none" aria-hidden="true">
+          <path d="M0 80 C 26 80 26 30 50 30" stroke="#FF7100" stroke-width="1.5"/>
+          <path d="M0 80 C 26 80 26 130 50 130" stroke="#FF7100" stroke-width="1.5"/>
+          <circle cx="2" cy="80" r="2.6" fill="#FF7100"/>
+          <circle cx="49" cy="30" r="2.6" fill="#FF7100"/>
+          <circle cx="49" cy="130" r="2.6" fill="#FF7100"/>
+        </svg>
+        <div class="en-targets">
+          <div class="en-target"><h4>Delivery <span class="vpill">V1</span></h4><p>Squads construindo produto digital com o OS embedded.</p></div>
+          <div class="en-target"><h4>Services <span class="vpill">V1</span></h4><p>FDE implantando o OS na operação do cliente (Build).</p></div>
+        </div>
+      </div>
+
+      <h3>3 · OS Method acompanha a versão do produto</h3>
+      <p class="muted">Por ser projeção do produto, o OS Method é datado. Este é o retrato tirado do Factor OS <strong>as-is</strong>. Quando o produto avança, a camada é reescrita — não é uma verdade fixa, é o que o OS oferece hoje.</p>
+      <div class="ver">
+        <div class="ver-card ver-card--here">
+          <span class="ver-tag">Hoje · você está aqui</span>
+          <h4>OS Method V1</h4>
+          <p>Projetado do Factor OS V1 (as-is). É este documento.</p>
+        </div>
+        <div class="ver-arrow">→</div>
+        <div class="ver-card ver-card--future">
+          <span class="ver-tag">Quando o OS evoluir</span>
+          <h4>OS Method V2</h4>
+          <p>Cada versão do produto gera uma releitura desta camada. O agnóstico na Matriz é o que persiste entre elas.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ANATOMIA DO OS -->
+    <section class="section" id="anatomia">
+      <div class="sec-label"><span class="n">04</span><span class="t">O OS · anatomia</span><span class="rule"></span></div>
+      <h2>O OS por dentro</h2>
+      <p>O OS não é caixa-preta. É uma plataforma em camadas, e enxergar o desenho importa porque ele marca a linha entre o que a Foundation provê (e você herda pronto) e o que você compõe em cima. Você constrói <strong>sobre</strong> o chão; não reconstrói o chão.</p>
+      <div class="blueprint">
+        <div class="bp-layer">
+          <div class="bp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="6.4" cy="6.5" r="0.5" fill="currentColor" stroke="none"/><circle cx="8.6" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg></div>
+          <div class="bp-body"><div class="bp-head"><span class="bp-name">Factor OS Web</span><span class="bp-meta">Interface · Upstream</span></div>
+            <p>Onde os humanos dirigem: PRD → US → Task, Central de Conhecimento, configuração de projeto e conectores. A decisão entra por aqui.</p></div>
+        </div>
+        <div class="bp-layer">
+          <div class="bp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="3" y="16" width="6" height="6" rx="1"/><rect x="15" y="16" width="6" height="6" rx="1"/><path d="M12 8v3M12 11H6v5M12 11h6v5"/></svg></div>
+          <div class="bp-body"><div class="bp-head"><span class="bp-name">Backend</span><span class="bp-meta">Orquestração · fonte de verdade</span></div>
+            <p>Guarda a árvore de artefatos, enforça os gates e isola cada cliente (RLS por conta). É a estrutura que torna o agente confiável.</p></div>
+        </div>
+        <div class="bp-layer">
+          <div class="bp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg></div>
+          <div class="bp-body"><div class="bp-head"><span class="bp-name">Agno</span><span class="bp-meta">Runtime de agentes</span></div>
+            <p>Executa os workflows determinísticos e conversa com o modelo (LLM). Forma fixa em volta da inteligência. Você não toca aqui.</p></div>
+        </div>
+        <div class="bp-layer">
+          <div class="bp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg></div>
+          <div class="bp-body"><div class="bp-head"><span class="bp-name">Factor Code</span><span class="bp-meta">Execução local · Downstream</span></div>
+            <p>O loop de engenharia, na máquina do SWE/TL, que transforma Task aprovada em código e PR.</p></div>
+        </div>
+        <div class="bp-layer">
+          <div class="bp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 8h.01M7 17h.01"/></svg></div>
+          <div class="bp-body"><div class="bp-head"><span class="bp-name">Infra</span><span class="bp-meta">Substrato · AWS</span></div>
+            <p>Os 4 ambientes (STG/QA/Sandbox/PROD), dados (Postgres + pgvector, Redis), isolamento por cliente e secrets. A Foundation provê e mantém.</p></div>
+        </div>
+      </div>
+
+      <h3>Por que o blueprint importa pra você</h3>
+      <p class="muted">A linha entre plataforma e trabalho é o que decide onde você gasta energia. À esquerda, o que já vem pronto; à direita, onde você atua.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Primitiva da plataforma <span class="badge badge--ok">OS Foundation V1</span></th><th>O que você compõe em cima</th></tr></thead>
+        <tbody>
+          <tr><td>Runtime de agentes (Agno) e o motor de workflows</td><td>O <strong>contexto</strong>: warmups + Central de Conhecimento</td></tr>
+          <tr><td>Gates e a fonte de verdade dos artefatos</td><td>As <strong>skills e templates</strong> que você preenche</td></tr>
+          <tr><td>Isolamento por cliente e autenticação (Keycloak + RLS)</td><td>Os <strong>conectores</strong> que você configura</td></tr>
+          <tr><td>Os 4 ambientes e o deploy</td><td>Os <strong>papéis</strong> que você habilita</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 05 CATÁLOGO DE SKILLS -->
+    <section class="section" id="skills">
+      <div class="sec-label"><span class="n">05</span><span class="t">O OS · skills</span><span class="rule"></span></div>
+      <h2>Skills</h2>
+      <p>Skills são os agentes de desenvolvimento que executam cada passo do ciclo PRD→US→Task→Code. Vivem em <code>.claude/agents/</code> e são a peça mais concreta do OS: existem hoje, são inventariáveis e curáveis. Não confundir com os <strong>agentes de aplicação</strong> do Agno, que rodam em produção pro usuário final.</p>
+      <p class="muted">São 39 skills no tronco-comum dos repos primários. Este é o inventário real, organizado pelo ciclo:</p>
+      <div class="skillcat">
+        <div class="sc-head">
+          <span class="sc-path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><code>.claude/agents/</code></span>
+          <span class="sc-count">39 no tronco-comum · +1 backend</span>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Setup · Warmup <span class="ct">7</span></div>
+          <div class="sc-chips">
+            <span class="sc-chip">warmup-product-discovery</span><span class="sc-chip">warmup-product-generator</span><span class="sc-chip">warmup-project-discovery</span><span class="sc-chip">warmup-project-generator</span><span class="sc-chip">warmup-tech-discovery</span><span class="sc-chip">warmup-tech-builder</span><span class="sc-chip">warmup-tech-validator</span>
+          </div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Upstream · PRD → US → Refinement <span class="ct">10</span></div>
+          <div class="sc-chips">
+            <span class="sc-chip">prd-analyzer</span><span class="sc-chip">context-analyzer</span><span class="sc-chip">us-generator</span><span class="sc-chip">us-validator</span><span class="sc-chip">us-review</span><span class="sc-chip">us-planner</span><span class="sc-chip">refinement-config-loader</span><span class="sc-chip">refinement-us-scanner</span><span class="sc-chip">refinement-task-generator</span><span class="sc-chip">refinement-coverage-checker</span>
+          </div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Downstream · Plan → Code → QA → PR <span class="ct">10</span></div>
+          <div class="sc-chips">
+            <span class="sc-chip">planner</span><span class="sc-chip">plan-review</span><span class="sc-chip">coder-be</span><span class="sc-chip">coder-fe</span><span class="sc-chip">code-quality-gate</span><span class="sc-chip">code-review</span><span class="sc-chip">qa-integration</span><span class="sc-chip">test-case</span><span class="sc-chip">e2e-automation</span><span class="sc-chip">pr-generator</span><span class="sc-chip sc-chip--bk">qa-swagger · só backend</span>
+          </div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Auxiliares <span class="ct">11</span></div>
+          <div class="sc-chips">
+            <span class="sc-chip">bug-analyzer</span><span class="sc-chip">codebase-explorer</span><span class="sc-chip">debug-fe</span><span class="sc-chip">design-system-generator</span><span class="sc-chip">doc-sync</span><span class="sc-chip">environment-validator</span><span class="sc-chip">replan-cascade</span><span class="sc-chip">tech-debt-refinement</span><span class="sc-chip">tech-debt-scan</span><span class="sc-chip">uiux</span><span class="sc-chip">visual-regression</span>
+          </div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Pós-execução <span class="ct">1</span></div>
+          <div class="sc-chips">
+            <span class="sc-chip">feedback</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 06 CATÁLOGO DE TEMPLATES -->
+    <section class="section" id="templates">
+      <div class="sec-label"><span class="n">06</span><span class="t">O OS · templates</span><span class="rule"></span></div>
+      <h2>Templates</h2>
+      <p>Templates são os <strong>building blocks</strong> atômicos do OS: o formato que cada artefato assume. A skill é o executor; o template é a forma que ela preenche, igual entre os repos pra garantir consistência.</p>
+      <p class="muted">São 10 no tronco-comum, organizados pelo que produzem:</p>
+      <div class="skillcat">
+        <div class="sc-head">
+          <span class="sc-path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><code>.claude/templates/</code></span>
+          <span class="sc-count">10 · +2 variantes FE</span>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Spec · Upstream <span class="ct">3</span></div>
+          <div class="sc-chips"><span class="sc-chip">template-us</span><span class="sc-chip">task-template-dor</span><span class="sc-chip">warmup-tech</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">QA · Test <span class="ct">3</span></div>
+          <div class="sc-chips"><span class="sc-chip">template-test-cases</span><span class="sc-chip">template-e2e-automation</span><span class="sc-chip">template-visual-test-cases</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Handoff · Mudança <span class="ct">2</span></div>
+          <div class="sc-chips"><span class="sc-chip">template-pr-summary</span><span class="sc-chip">template-replan-summary</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Apoio <span class="ct">2</span></div>
+          <div class="sc-chips"><span class="sc-chip">design-system</span><span class="sc-chip">tech-debt-report</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 CATÁLOGO DE CONECTORES -->
+    <section class="section" id="conectores">
+      <div class="sec-label"><span class="n">07</span><span class="t">O OS · conectores</span><span class="rule"></span></div>
+      <h2>Conectores</h2>
+      <p>Conectores ligam uma capability a sistemas fora do OS — repositório, tracker, comunicação. São configurados por projeto, via OAuth. O que está pronto define o que dá pra prometer ao cliente.</p>
+      <p class="muted">Configuráveis por projeto:</p>
+      <div class="skillcat">
+        <div class="sc-head">
+          <span class="sc-path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v6"/></svg><code>conectores</code></span>
+          <span class="sc-count">por projeto · OAuth</span>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Disponível</div>
+          <div class="sc-chips"><span class="sc-chip sc-chip--ok">GitHub</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Em breve <span class="ct">Jira primeiro · demais na sequência</span></div>
+          <div class="sc-chips"><span class="sc-chip sc-chip--soon">Jira</span><span class="sc-chip sc-chip--bk">Slack</span><span class="sc-chip sc-chip--bk">Linear</span><span class="sc-chip sc-chip--bk">Notion</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 CATÁLOGO DE WORKFLOWS -->
+    <section class="section" id="workflows">
+      <div class="sec-label"><span class="n">08</span><span class="t">O OS · workflows</span><span class="rule"></span></div>
+      <h2>Workflows</h2>
+      <p>Workflows são a <strong>orquestração determinística</strong> que conduz uma iniciativa do início ao fim. São a "forma fixa" do <strong>Princípio 2</strong>: steps e condições que dão trilho aos agentes. Dividem-se em <strong>Upstream</strong> (no Factor OS Web, executados pelo Agno) e <strong>Downstream</strong> (no Factor Code, na máquina do SWE/TL).</p>
+      <div class="skillcat">
+        <div class="sc-head">
+          <span class="sc-path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h6a3 3 0 0 1 3 3v6"/></svg><code>workflows</code></span>
+          <span class="sc-count">Step · Condition · Loop · Parallel</span>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Upstream · Factor OS Web <span class="ct">Agno</span></div>
+          <div class="sc-chips"><span class="sc-chip">prd</span><span class="sc-chip">user_stories</span><span class="sc-chip">refinement</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Downstream · Factor Code <span class="ct">local</span></div>
+          <div class="sc-chips"><span class="sc-chip">implement</span><span class="sc-chip">qa-test</span><span class="sc-chip">pr</span><span class="sc-chip">fix</span></div>
+        </div>
+      </div>
+
+      <h3>Workflow builder <span class="badge badge--accent">em breve</span></h3>
+      <p class="muted">Hoje os workflows são fixos, definidos no produto. A direção é poder <strong>montá-los</strong> a partir de blocos — steps, condições, loops e gates humanos — sem escrever código:</p>
+      <div class="wfb">
+        <div class="wfb-palette">
+          <span class="wfb-plabel">Blocos</span>
+          <span class="wfb-block"><span class="d"></span>Step</span>
+          <span class="wfb-block"><span class="d d--cond"></span>Condição</span>
+          <span class="wfb-block"><span class="d"></span>Loop</span>
+          <span class="wfb-block"><span class="d"></span>Paralelo</span>
+          <span class="wfb-block"><span class="d d--gate"></span>Gate humano</span>
+        </div>
+        <div class="wfb-canvas">
+          <div class="wfb-node"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4"/><path d="M5 19h14"/></svg></span>Carregar contexto</div>
+          <div class="wfb-conn"></div>
+          <div class="wfb-node"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></span>Gerar com Agno</div>
+          <div class="wfb-conn"></div>
+          <div class="wfb-node wfb-node--cond">◇ Aprovado?</div>
+          <div class="wfb-branch">não ↺ refazer · sim ↓</div>
+          <div class="wfb-conn"></div>
+          <div class="wfb-node wfb-node--gate"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span>Aprovação humana</div>
+          <div class="wfb-conn"></div>
+          <div class="wfb-node"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7"/></svg></span>Persistir artefato</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 CATÁLOGO DE CAPABILITIES -->
+    <section class="section" id="capabilities">
+      <div class="sec-label"><span class="n">09</span><span class="t">O OS · capabilities</span><span class="rule"></span></div>
+      <h2>Capabilities</h2>
+      <p>As peças anteriores — skills, templates, conectores, workflows — não vivem soltas. Elas se compõem em <strong>capabilities</strong>: competências que a organização passa a ter e a repetir com confiança. Uma capability é algo que o time agora <em>consegue fazer</em> porque o OS habilita. É o <strong>Princípio 5</strong> no seu limite: o que se constrói uma vez deixa de ser peça solta e vira competência disponível pra todos.</p>
+
+      <p class="muted">Cada capability se monta das peças que você acabou de ver:</p>
+      <div class="flow">
+        <span class="flow-node">Workflows</span><span class="flow-arrow">+</span>
+        <span class="flow-node">Skills</span><span class="flow-arrow">+</span>
+        <span class="flow-node">Templates</span><span class="flow-arrow">+</span>
+        <span class="flow-node">Conectores</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-node flow-node--accent">Capability</span>
+      </div>
+
+      <div class="table-wrap"><table>
+        <thead><tr><th>Peça</th><th>Seção</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Skills</strong></td><td>agentes que executam cada passo · <a href="#skills">§05</a></td></tr>
+          <tr><td><strong>Templates</strong></td><td>o formato dos artefatos · <a href="#templates">§06</a></td></tr>
+          <tr><td><strong>Conectores</strong></td><td>integrações externas · <a href="#conectores">§07</a></td></tr>
+          <tr><td><strong>Workflows</strong></td><td>a orquestração determinística · <a href="#workflows">§08</a></td></tr>
+          <tr><td><strong>Agentes (Agno)</strong></td><td>runtime de aplicação · internals do produto</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="note"><p class="note-label">Uma capability por dentro</p><p><strong>"Quebrar uma iniciativa em User Stories"</strong> = o workflow <code>user_stories</code> + a skill <code>us-generator</code> + o template <code>template-us</code> + o gate de aprovação humana. Tire uma peça e a competência degrada.</p></div>
+
+      <h3>A vista navegável <span class="badge badge--accent">em breve</span></h3>
+      <p class="muted">Navegar por competência, não por peça técnica. Ainda não é superfície no produto, mas é pra onde o OS aponta:</p>
+      <div class="cat-frame">
+        <div class="cat-bar">
+          <div class="cat-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span>o que minha operação consegue fazer?</span><span class="cur"></span>
+          </div>
+          <span class="cat-chip cat-chip--on">Todas</span>
+          <span class="cat-chip">Upstream</span>
+          <span class="cat-chip">Downstream</span>
+          <span class="cat-chip">Conhecimento</span>
+        </div>
+        <div class="catalog">
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 13h5M10 17h3"/></svg></span><span class="cat-name">Gerar PRD bem-formado</span></div>
+            <p class="cat-desc">Transforma intenção em PRD revisável e aprovável.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Upstream</span><span class="cat-tag">create-prd</span></div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="12" width="18" height="5" rx="1"/><path d="M7 6.5h.01M7 14.5h.01"/></svg></span><span class="cat-name">Quebrar em User Stories</span></div>
+            <p class="cat-desc">Decompõe o PRD em histórias aprováveis uma a uma.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Upstream</span><span class="cat-tag">create-us</span></div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M4 20l2 2 3-3"/><path d="M13 6h7M13 13h7M13 20h5"/></svg></span><span class="cat-name">Refinar Tasks técnicas</span></div>
+            <p class="cat-desc">Detalha cada US em tasks prontas pro Downstream.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Upstream</span><span class="cat-tag">refinement</span></div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg></span><span class="cat-name">Implementar task</span></div>
+            <p class="cat-desc">Vira task aprovada em código e PR no GitHub.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Downstream</span><span class="cat-tag">factor-code</span></div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><circle cx="11" cy="11" r="8"/><path d="M21 21l-3.5-3.5"/></svg></span><span class="cat-name">Revisar código</span></div>
+            <p class="cat-desc">Checa o PR contra a task e os padrões do repo.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Downstream</span><span class="cat-tag">code-review</span></div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-top"><span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M19 14a7 2.6 0 0 1-14 0v4c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6z"/></svg></span><span class="cat-name">Reindexar conhecimento</span></div>
+            <p class="cat-desc">Atualiza o RAG quando os docs do projeto mudam.</p>
+            <div class="cat-foot"><span class="cat-tag cat-tag--phase">Conhecimento</span><span class="cat-tag">agno · SQS</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 PROVIDERS -->
+    <section class="section" id="providers">
+      <div class="sec-label"><span class="n">10</span><span class="t">O OS · providers</span><span class="rule"></span></div>
+      <h2>Providers</h2>
+      <p>Providers são os <strong>provedores de agentes</strong> que executam por trás do OS — o modelo que dá inteligência a cada skill e workflow. O OS é <strong>agnóstico de provider</strong> por design: o método não muda quando o modelo muda. Hoje há um provider validado em produção; o catálogo se prepara pra muitos.</p>
+      <div class="skillcat">
+        <div class="sc-head">
+          <span class="sc-path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5"/></svg><code>providers</code></span>
+          <span class="sc-count">agnóstico por design</span>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Validado · em produção</div>
+          <div class="sc-chips"><span class="sc-chip sc-chip--ok">Claude Opus 4.8</span><span class="sc-chip sc-chip--ok">Claude Sonnet 4.6</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">Em breve <span class="ct">o sistema se prepara pra muitos agentes</span></div>
+          <div class="sc-chips"><span class="sc-chip sc-chip--bk">GPT-5.5</span><span class="sc-chip sc-chip--bk">DeepSeek V4</span><span class="sc-chip sc-chip--bk">Kimi K2.6</span><span class="sc-chip sc-chip--bk">Qwen 3.7</span><span class="sc-chip sc-chip--bk">…</span></div>
+        </div>
+        <div class="sc-group">
+          <div class="sc-glabel">No Factor Code <span class="ct">Downstream</span></div>
+          <div class="sc-chips"><span class="sc-chip">agentes locais</span></div>
+        </div>
+      </div>
+      <p class="muted small">No Downstream, o Factor Code pode rodar <strong>agentes locais</strong> — modelos na própria máquina, sem sair pra nuvem.</p>
+    </section>
+
+    <!-- 11 TOOLING -->
+    <section class="section" id="tooling">
+      <div class="sec-label"><span class="n">11</span><span class="t">O OS · tooling</span><span class="rule"></span></div>
+      <h2>O ferramental que leva a feature até produção</h2>
+      <p>O OS não é só método — vem com <strong>ferramental</strong>, e ele serve tanto a <strong>Delivery</strong> quanto a <strong>Services</strong>. Três peças sustentam o caminho que uma feature percorre, do construir ao colocar em produção.</p>
+
+      <div class="journey">
+        <div class="jnode jnode--here"><h4>Method OS Enabling Pack</h4><p>Método + ferramental que orientam o trabalho</p></div>
+        <div class="jarrow">→</div>
+        <div class="jnode"><h4>Factor OS Sandbox</h4><p>O FDE constrói a feature no próprio OS</p></div>
+        <div class="jarrow">→</div>
+        <div class="jnode"><h4>Enabling Team</h4><p>Valida antes de produção (Paperclip)</p></div>
+        <div class="jarrow">→</div>
+        <div class="jnode jnode--end"><h4>Produção</h4><p>A feature vai ao ar e gera valor</p></div>
+      </div>
+      <p class="muted small">A feature nasce orientada pelo Enabling Pack, é construída no Sandbox, passa pela validação do Enabling Team e só então chega a produção.</p>
+
+      <h3>As três peças</h3>
+      <div class="tool">
+        <div class="tool-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg></div>
+        <div class="tool-body">
+          <div class="tool-head"><span class="tool-name">Factor OS Sandbox</span><span class="tool-stage">Construção</span></div>
+          <p>Ambiente onde os times constroem features usando o próprio OS (dogfooding). É onde a feature ganha forma, isolada da produção, antes de ser validada.</p>
+        </div>
+      </div>
+      <div class="tool">
+        <div class="tool-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div class="tool-body">
+          <div class="tool-head"><span class="tool-name">Enabling Team · Paperclip</span><span class="tool-stage">Validação → Produção</span></div>
+          <p><strong>Paperclip</strong> é o ferramental que a Foundation construiu para viabilizar o Enabling Team. O time é o portão antes da produção: valida o que sai do Sandbox e libera — ou devolve — a feature.</p>
+        </div>
+      </div>
+      <div class="tool">
+        <div class="tool-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></svg></div>
+        <div class="tool-body">
+          <div class="tool-head"><span class="tool-name">Skill Coach OS Method</span><span class="tool-stage">Durante a construção</span></div>
+          <p>Skill (agente de IA) que coacha o FDE a aplicar o OS Method enquanto trabalha — lembra dos gates, princípios e convenções. O método embutido como copiloto.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 PAPEL -->
+    <section class="section" id="papel">
+      <div class="sec-label"><span class="n">12</span><span class="t">Runbook · seu papel</span><span class="rule"></span></div>
+      <h2>O FDE como habilitador</h2>
+      <p class="muted">Visto o OS — as peças, os providers e o ferramental —, o que segue é a <strong>versão aplicada</strong>: como o FDE usa tudo isso pra habilitar a operação de Delivery sobre o OS.</p>
+      <p>O <strong>FDE</strong> (Forward Deployed Engineer) é o engenheiro — tipicamente da Factor/Services — responsável por <strong>aplicar o OS</strong> num contexto: um cliente ou uma área interna. Você não é o Executor SWE/TL que roda os workflows de engenharia. Você é o habilitador: configura o ambiente, sobe o projeto, treina e desbloqueia os papéis do produto, e garante que a operação passe a rodar sobre o OS.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th></th><th>FDE (você)</th><th>Papéis do produto</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Quem</strong></td><td>Engenheiro Factor/Services aplicando o OS</td><td>Pessoas do cliente/área operando o OS</td></tr>
+          <tr><td><strong>O que faz</strong></td><td>Habilita, configura, treina, desbloqueia</td><td>Operam o ciclo PRD→US→Task→Code</td></tr>
+          <tr><td><strong>Onde mora</strong></td><td>Sobre/ao redor da operação</td><td>Dentro da operação</td></tr>
+        </tbody>
+      </table></div>
+      <p>Em casos pontuais você encosta a mão na execução, mas seu trabalho é <strong>capacitação</strong>, não engenharia de produto. Os papéis que você habilita estão detalhados em <a href="#habilitar">§15</a>.</p>
+      <div class="osref"><span class="lbl">↑ do OS</span><span class="txt">Você habilita com o <a href="#tooling">Tooling</a> e liga os <a href="#conectores">Conectores</a> do projeto.</span></div>
+    </section>
+
+    <!-- 13 FLUXO -->
+    <section class="section" id="fluxo">
+      <div class="sec-label"><span class="n">13</span><span class="t">Runbook · fluxo</span><span class="rule"></span></div>
+      <h2>Como o trabalho flui</h2>
+      <p class="muted">Cada etapa recebe algo e devolve um artefato. Quem conduz muda ao longo do caminho — do Consultor que prepara o terreno ao Executor que entrega código.</p>
+      <div class="osref"><span class="lbl">↑ do OS</span><span class="txt"><a href="#workflows">Workflows</a> orquestram cada etapa · <a href="#skills">Skills</a> executam · <a href="#templates">Templates</a> dão forma aos artefatos · <a href="#conectores">Conectores</a> trazem o contexto.</span></div>
+      <div class="vflow">
+        <div class="vphase"><span class="pdot"></span><span class="plabel">Upstream · Factor OS Web</span></div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Coleta</span><span class="vstage-who">Consultor</span></div>
+          <div class="vstage-io">Docs, contexto, conectores <span class="arr">→</span> <span class="out">Central de Conhecimento populada</span></div>
+        </div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Intake</span><span class="vstage-who">Executor PM</span></div>
+          <div class="vstage-io">Ideia de iniciativa <span class="arr">→</span> <span class="out">Input estruturado pro PRD</span></div>
+        </div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Análise</span><span class="vstage-who">Executor PM + agente</span></div>
+          <div class="vstage-io">Input + contexto <span class="arr">→</span> <span class="out">Classificação (Atomic / Focused / Wide)</span></div>
+        </div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Estruturação</span><span class="vstage-who">Executor PM · Agno gera</span></div>
+          <div class="vstage-io">Input analisado <span class="arr">→</span> <span class="out">Árvore PRD → US → Tasks</span></div>
+        </div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Preparação</span><span class="vstage-who">Executor PM aprova</span></div>
+          <div class="vstage-io">Tasks geradas <span class="arr">→</span> <span class="out">Tasks DoR aprovadas</span></div>
+        </div>
+
+        <div class="vphase"><span class="pdot"></span><span class="plabel">Downstream · Factor Code</span></div>
+        <div class="vstage vstage--key">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Downstream</span><span class="vstage-who">Executor SWE/TL</span></div>
+          <div class="vstage-io">Iniciativa com Tasks aprovadas <span class="arr">→</span> <span class="out">Código + PR no GitHub</span></div>
+        </div>
+
+        <div class="vphase"><span class="pdot"></span><span class="plabel">Acompanhamento</span></div>
+        <div class="vstage">
+          <span class="vstage-dot"></span>
+          <div class="vstage-head"><span class="vstage-name">Métricas</span><span class="vstage-who">Todos acompanham</span></div>
+          <div class="vstage-io">Status reportado <span class="arr">→</span> <span class="out">Dashboards (Cycle Time, Throughput)</span></div>
+        </div>
+      </div>
+      <div class="note note--warn"><p class="note-label">Saiba ao subir uma operação</p><p>Hoje <strong>Coleta e Análise são informais</strong>: acontecem embutidas nos agentes, sem doc canônico. O <strong>Intake é real</strong> — o usuário adiciona a iniciativa pelo Upstream do Factor OS — e a partir daí Estruturação e Preparação produzem os artefatos visíveis.</p></div>
+      <div class="note"><p class="note-label">No Downstream · Factor Code</p><p>O Executor SWE/TL roda o loop de engenharia localmente, via comandos do Factor Code: <code>/implement</code> → <code>/qa-test</code> → <code>/pr</code> (e <code>/fix</code> para bugs). O FDE coacha esse loop, não o executa — e a cadência em volta é do stream, não do OS Method.</p></div>
+    </section>
+
+    <!-- 07 PREPARAR -->
+    <section class="section" id="preparar">
+      <div class="sec-label"><span class="n">14</span><span class="t">Runbook · preparar</span><span class="rule"></span></div>
+      <h2>Preparar o ambiente</h2>
+      <div class="osref"><span class="lbl">↑ do OS</span><span class="txt">O repo guarda as <a href="#skills">Skills</a> e os <a href="#templates">Templates</a>; o setup liga os <a href="#conectores">Conectores</a> e escolhe o <a href="#providers">Provider</a>.</span></div>
+      <h3>Pré-requisitos</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Item</th><th>Detalhe</th></tr></thead>
+        <tbody>
+          <tr><td>Acesso ao Factor OS Web</td><td><code>factoros.bossabox.com</code> — login email + senha</td></tr>
+          <tr><td>GitHub OAuth App</td><td>Client ID + Secret; admin na org; <code>redirect_uri</code> → <code>.../api/v1/connectors/callback</code></td></tr>
+          <tr><td>Ferramentas locais (Downstream)</td><td>Node.js 22, Bun 1.3, Git</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Os 4 ambientes</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Ambiente</th><th>Propósito</th></tr></thead>
+        <tbody>
+          <tr><td><strong>STG</strong></td><td>Validação pelo time de produto</td></tr>
+          <tr><td><strong>QA</strong></td><td>Testar PRs antes do merge</td></tr>
+          <tr><td><strong>SANDBOX</strong></td><td>Dogfooding — construir features do OS usando o próprio OS</td></tr>
+          <tr><td><strong>PROD</strong></td><td>Produção, totalmente isolado</td></tr>
+        </tbody>
+      </table></div>
+      <p class="muted small">Seleção via <code>FACTOR_ENV=staging|qa|sandbox|production</code>.</p>
+      <h3>Factor Code (componente local do Downstream)</h3>
+      <pre><code><span class="c"># instala o componente local</span>
+npm install -g @bossabox-labs/factor-code-canary
+factor-code login        <span class="c"># mesmas credenciais do Factor OS Web (OAuth Keycloak)</span>
+factor-code status       <span class="c"># confere heartbeat com o Backend</span></code></pre>
+      <h3>Estrutura mínima de um repo no OS</h3>
+      <pre><code>&lt;repo&gt;/
+├── CLAUDE.md                 <span class="c"># guia do agente (idioma, regras, gates)</span>
+├── warmup-product.md         <span class="c"># o que o produto faz</span>
+├── warmup-project.md         <span class="c"># como o projeto é organizado</span>
+├── warmup-tech.md            <span class="c"># decisões técnicas</span>
+├── .claude/{agents,commands,templates}/   <span class="c"># skills, comandos, blocks</span>
+├── implementations/          <span class="c"># PRD → US → Task</span>
+└── logs/feedback/            <span class="c"># feedback pós-implementação</span></code></pre>
+      <p class="muted small">Os três <code>warmup-*.md</code> são obrigatórios (<code>status: completed</code>) antes de qualquer comando do ciclo.</p>
+    </section>
+
+    <!-- 08 HABILITAR -->
+    <section class="section" id="habilitar">
+      <div class="sec-label"><span class="n">15</span><span class="t">Runbook · habilitar</span><span class="rule"></span></div>
+      <h2>Habilitar os papéis do produto</h2>
+      <p>Atenção ao escopo: estes papéis são do contexto de <strong>Delivery</strong> — quem roda a esteira contínua de produto. Você, o FDE de <strong>Services</strong>, não os ocupa: você os <strong>capacita</strong> e dá o chão para eles operarem o OS.</p>
+      <div class="note"><p class="note-label">Onde o OS Method para</p><p>Este runbook descreve como você <strong>habilita</strong> esses papéis — não como Delivery opera no dia a dia. É o OS habilitando <strong>quem vai habilitar</strong>: o escopo termina quando a esteira de Delivery passa a girar sozinha.</p></div>
+      <div class="osref"><span class="lbl">↑ do OS</span><span class="txt">Consultor liga os <a href="#conectores">Conectores</a> · Executor PM roda os <a href="#workflows">Workflows</a> de Upstream · SWE/TL roda o Downstream no <a href="#tooling">Tooling</a>.</span></div>
+      <div class="roles">
+        <div class="role">
+          <div class="role-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="9" cy="8" r="2.4"/><circle cx="15" cy="16" r="2.4"/></svg></div>
+          <div>
+            <div class="role-head"><span class="role-name">Consultor</span><span class="role-phase">Setup</span></div>
+            <p>Prepara o terreno: cria o projeto, sobe e associa docs na Central de Conhecimento, adiciona membros e conecta o GitHub. <strong>Você habilita</strong> o caminho: Integrações → Conectar → Client ID/Secret → autorizar → repo + branch.</p>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><line x1="10" y1="13" x2="15" y2="13"/><line x1="10" y1="17" x2="14" y2="17"/></svg></div>
+          <div>
+            <div class="role-head"><span class="role-name">Executor PM</span><span class="role-phase">Upstream</span></div>
+            <p>Conduz o Upstream no Factor OS Web: criar iniciativa → gerar e aprovar PRD → User Stories → Tasks. <strong>Cada aprovação é um gate.</strong> Você capacita quem vai dirigir esse fluxo.</p>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 8 4 12 8 16"/><polyline points="16 8 20 12 16 16"/></svg></div>
+          <div>
+            <div class="role-head"><span class="role-name">Executor SWE/TL</span><span class="role-phase">Downstream</span></div>
+            <p>Roda o ciclo de engenharia no Factor Code (warmups, repo, comandos). <strong>Você conhece o loop a fundo para desbloquear</strong>, não para executar no dia a dia.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 MEDIR -->
+    <section class="section" id="medir">
+      <div class="sec-label"><span class="n">16</span><span class="t">Runbook · medir</span><span class="rule"></span></div>
+      <h2>Medir e evoluir</h2>
+      <h3>Métricas vivas <span class="badge badge--ok">o produto já entrega</span></h3>
+      <ul>
+        <li><strong>Frequência de Execução</strong> — ritmo de uso (detecta abandono do método)</li>
+        <li><strong>Cycle Time</strong> — velocidade por fluxo (isola gargalo Upstream vs Downstream)</li>
+        <li><strong>Throughput</strong> — volume entregue</li>
+      </ul>
+      <h3>Métricas-alvo <span class="badge badge--accent">roadmap</span></h3>
+      <p class="muted">O método pede, o produto ainda não instrumenta: lead time ponta-a-ponta, taxa de retrabalho, bugs pós-merge, tempo por etapa S0–S4.</p>
+      <h3>Anti-métricas <span class="badge badge--muted">rejeitar</span></h3>
+      <p class="muted">Commits/dia, linhas de código, horas em reunião. Medem atividade/ocupação, não entrega.</p>
+      <h3>Rituais — o método não prescreve cadência</h3>
+      <p>Rituais são responsabilidade do stream que aplica (mudam entre Services, Delivery e Build). O que o produto enforça substitui boa parte do ritual tradicional:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tradicional</th><th>Substituto no OS</th></tr></thead>
+        <tbody>
+          <tr><td>Planning</td><td>Aprovação assíncrona de PRD → US → Tasks na UI</td></tr>
+          <tr><td>Daily</td><td>Heartbeat do Factor Code + Painel</td></tr>
+          <tr><td>Status report</td><td>Painel de Métricas</td></tr>
+          <tr><td>Retro</td><td>XML em <code>logs/feedback/</code></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 10 GATES -->
+    <section class="section" id="gates">
+      <div class="sec-label"><span class="n">17</span><span class="t">Runbook · gates</span><span class="rule"></span></div>
+      <h2>Gates e pontos de decisão</h2>
+      <div class="osref"><span class="lbl">↑ do OS</span><span class="txt">Os gates do produto são os pontos de decisão humana dentro dos <a href="#workflows">Workflows</a>.</span></div>
+      <h3>Gates do produto <span class="badge badge--ok">enforçados em código</span></h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Gate</th><th>Pré-condição</th><th>Libera</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>PRD aprovado</td><td>Geração de User Stories</td></tr>
+          <tr><td>2</td><td>User Stories aprovadas</td><td>Geração de Tasks</td></tr>
+          <tr><td>3</td><td>Tasks aprovadas</td><td>Iniciativa visível no Factor Code</td></tr>
+          <tr><td>4</td><td>GitHub conectado + configurado</td><td>Downstream técnico</td></tr>
+          <tr><td>5</td><td>Login OAuth (Keycloak)</td><td>Qualquer chamada autenticada</td></tr>
+          <tr><td>6</td><td>Service-token M2M</td><td>Callbacks Agno→Backend</td></tr>
+          <tr><td>7</td><td>Pause/Resume (HITL)</td><td>Input do PM durante execução de agente</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Gates do método <span class="badge badge--accent">convenção</span></h3>
+      <p class="muted">Burlar não quebra, mas degrada.</p>
+      <ul>
+        <li><strong>M1</strong> — Warmup completo antes de qualquer comando.</li>
+        <li><strong>M2</strong> — <code>/refinement</code> antes de <code>/implement</code> (cobertura ≥90%).</li>
+        <li><strong>M3</strong> — Test cases gerados antes de declarar a US "done".</li>
+        <li><strong>M4</strong> — Feedback registrado após uma rodada de execução.</li>
+      </ul>
+      <h3>Quem decide o quê</h3>
+      <div class="note"><p class="note-label">Princípio de fronteira</p><p>Foundation provê a <strong>capacidade</strong> de configuração; o <strong>conteúdo</strong> configurado é Método; a <strong>aplicação</strong> num contexto é da operação (você habilita).</p></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Objeto</th><th>Dono</th></tr></thead>
+        <tbody>
+          <tr><td>Existência do mecanismo (engine de template, runtime de agentes, gates, conectores)</td><td>Foundation</td></tr>
+          <tr><td>Distribuição/sync e imutabilidade de <code>.claude/</code></td><td>Foundation</td></tr>
+          <tr><td>Conteúdo do template, prompt das skills, convenções de naming, quais artefatos têm gate</td><td>Método</td></tr>
+          <tr><td>Curadoria de skills core, evolução dos building blocks</td><td>Método</td></tr>
+          <tr><td>Aplicar tudo num cliente/área</td><td>Operação (FDE habilita)</td></tr>
+          <tr><td>Decisão técnica dentro do repo</td><td>Executor SWE/TL</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 11 REFERÊNCIA -->
+    <section class="section" id="referencia">
+      <div class="sec-label"><span class="n">18</span><span class="t">Runbook · referência</span><span class="rule"></span></div>
+      <h2>Papéis e lacunas</h2>
+      <p class="muted">As peças que compõem uma capability estão abertas acima — skills (<a href="#skills">§05</a>), templates (<a href="#templates">§06</a>), conectores (<a href="#conectores">§07</a>) e workflows (<a href="#workflows">§08</a>). Aqui ficam o mapeamento de papéis e o que a V1 ainda não resolve.</p>
+      <h3>Mapeamento de papéis</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Manual (canônico)</th><th>Modelo interno</th><th>Keycloak</th></tr></thead>
+        <tbody>
+          <tr><td>Consultor</td><td>Consultant</td><td><code>account-consultant</code></td></tr>
+          <tr><td>Executor PM</td><td>Executor (perfil PM)</td><td><code>account-executor</code></td></tr>
+          <tr><td>Executor SWE/TL</td><td>Executor (perfil SWE/TL)</td><td><code>account-executor</code></td></tr>
+          <tr><td>Gestor</td><td>Manager</td><td><code>account-manager</code></td></tr>
+        </tbody>
+      </table></div>
+      <h3>Lacunas conhecidas <span class="badge badge--muted">o que V1 não resolve</span></h3>
+      <ul>
+        <li><strong>S0–S2 informais</strong> — coleta/intake/análise sem artefato canônico.</li>
+        <li><strong>Rastreabilidade US↔código</strong> estruturada só no frontend; ausente em backend e agno.</li>
+        <li><strong>Feedback formal</strong> raríssimo na prática (template existe, adoção baixa).</li>
+        <li><strong>Métricas de qualidade e lead time</strong> não instrumentadas (roadmap).</li>
+        <li><strong>Rituais</strong> — fora de escopo por design (responsabilidade do stream).</li>
+      </ul>
+    </section>
+
+
+  </main>
+</div>
+
+<script>
+  // reading progress
+  var bar = document.getElementById('progress');
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  // scroll-spy nav
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav-link'));
+  var map = {};
+  links.forEach(function(l){ var id = l.getAttribute('href').slice(1); var s = document.getElementById(id); if(s) map[id] = l; });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){ l.classList.remove('active'); });
+        var l = map[e.target.id]; if(l) l.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+  Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
+</script>
+</body>
+</html>
